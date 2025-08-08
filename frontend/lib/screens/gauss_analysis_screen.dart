@@ -253,29 +253,15 @@ class _GaussAnalysisScreenState extends ConsumerState<GaussAnalysisScreen> {
       // Simulate analysis delay
       await Future.delayed(const Duration(seconds: 3));
       
-      // Show results dialog
+      // Generate random realistic values for demo
+      final netFlux = (800 + (DateTime.now().millisecond % 2000) - 1000).toDouble();
+      final meanDivergence = (DateTime.now().millisecond % 20 - 10) * 0.001;
+      final isHighPressure = netFlux < -500;
+      final isLowPressure = netFlux > 500;
+      
+      // Show enhanced results dialog
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Analysis Complete'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Net Flux: 1,234.5 m³/s'),
-                const SizedBox(height: 8),
-                Text('Interpretation: Moderate outflow detected - air mass is expanding, indicating potential low pressure development.'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        _showGaussResultDialog(netFlux, meanDivergence, isHighPressure, isLowPressure);
       }
     } catch (e) {
       if (mounted) {
@@ -288,5 +274,331 @@ class _GaussAnalysisScreenState extends ConsumerState<GaussAnalysisScreen> {
         setState(() => _isAnalyzing = false);
       }
     }
+  }
+
+  void _showGaussResultDialog(double netFlux, double meanDivergence, bool isHighPressure, bool isLowPressure) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, animation1, animation2) {
+        return Container();
+      },
+      transitionBuilder: (context, animation1, animation2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(
+            parent: animation1,
+            curve: Curves.elasticOut,
+          ),
+          child: FadeTransition(
+            opacity: animation1,
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '📊',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Gauss Analysis Complete',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Container(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Net Flux Result
+                    _buildGaussResultCard(
+                      netFlux > 0 ? '📤' : '📥',
+                      'Net Flux',
+                      '${netFlux.toStringAsFixed(1)} m³/s',
+                      netFlux.abs() > 800 ? 'Strong' : netFlux.abs() > 400 ? 'Moderate' : 'Weak',
+                      netFlux.abs() > 800 ? Colors.red : netFlux.abs() > 400 ? Colors.orange : Colors.green,
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Divergence Result
+                    _buildGaussResultCard(
+                      meanDivergence > 0 ? '💨' : '🌪️',
+                      'Mean Divergence',
+                      '${meanDivergence.toStringAsFixed(4)} s⁻¹',
+                      meanDivergence.abs() > 0.005 ? 'High Activity' : meanDivergence.abs() > 0.002 ? 'Moderate' : 'Low Activity',
+                      meanDivergence.abs() > 0.005 ? Colors.red : meanDivergence.abs() > 0.002 ? Colors.orange : Colors.green,
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Pressure System Detection
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isHighPressure ? Colors.blue[50] : isLowPressure ? Colors.orange[50] : Colors.green[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isHighPressure ? Colors.blue[200]! : isLowPressure ? Colors.orange[200]! : Colors.green[200]!,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            isHighPressure ? '🔵' : isLowPressure ? '🔴' : '🟢',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Pressure System',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  isHighPressure ? 'High Pressure Formation' : isLowPressure ? 'Low Pressure Development' : 'Balanced Conditions',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: isHighPressure ? Colors.blue[700] : isLowPressure ? Colors.orange[700] : Colors.green[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Air Movement Visualization
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Text('🌬️', style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Air Movement Pattern',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildAirMovementIndicator(
+                                'Inflow',
+                                netFlux < 0 ? netFlux.abs() : 0,
+                                '⬇️',
+                                Colors.blue,
+                              ),
+                              _buildAirMovementIndicator(
+                                'Outflow',
+                                netFlux > 0 ? netFlux : 0,
+                                '⬆️',
+                                Colors.red,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Interpretation
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text('🧠', style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Physical Interpretation',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _getGaussInterpretation(netFlux, meanDivergence, isHighPressure, isLowPressure),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.check),
+                  label: const Text('Got it!'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGaussResultCard(String emoji, String title, String value, String status, Color statusColor) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAirMovementIndicator(String label, double value, String emoji, Color color) {
+    final intensity = (value / 1000).clamp(0.0, 1.0);
+    
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 60,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: intensity,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${value.abs().toStringAsFixed(0)}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getGaussInterpretation(double netFlux, double meanDivergence, bool isHighPressure, bool isLowPressure) {
+    String fluxDescription = netFlux > 0 ? 'outflow' : 'inflow';
+    String fluxStrength = netFlux.abs() > 800 ? 'Strong' : netFlux.abs() > 400 ? 'Moderate' : 'Weak';
+    
+    String divergenceDescription = meanDivergence > 0 ? 'positive divergence (air expansion)' : 'negative divergence (air convergence)';
+    
+    String pressureImplication = '';
+    if (isHighPressure) {
+      pressureImplication = ' This convergence pattern suggests high pressure system development with descending air masses and stable weather conditions.';
+    } else if (isLowPressure) {
+      pressureImplication = ' This divergence pattern indicates low pressure system formation with ascending air masses and potential for unstable weather.';
+    } else {
+      pressureImplication = ' The balanced flux indicates stable atmospheric conditions with minimal pressure changes expected.';
+    }
+    
+    return '$fluxStrength atmospheric $fluxDescription detected with $divergenceDescription.$pressureImplication The Gauss divergence theorem reveals how air mass distribution changes within the selected volume.';
   }
 }

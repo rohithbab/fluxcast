@@ -87,34 +87,43 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Placeholder map area
-                    Container(
-                      height: 200,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[400]!),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.map,
-                              size: 48,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Interactive Map\n(Tap to add points)',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                    // Interactive map area
+                    GestureDetector(
+                      onTapDown: (details) => _addPointFromTap(details),
+                      child: Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Theme.of(context).colorScheme.tertiary),
+                        ),
+                        child: CustomPaint(
+                          painter: PathPainter(_pathPoints, Theme.of(context).colorScheme.tertiary),
+                          child: _pathPoints.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.touch_app,
+                                        size: 48,
+                                        color: Theme.of(context).colorScheme.tertiary,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Tap to add points\nCreate a closed path',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.tertiary,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -374,6 +383,20 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
     });
   }
 
+  void _addPointFromTap(TapDownDetails details) {
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final localPosition = details.localPosition;
+    
+    // Convert tap position to lat/lon coordinates (simplified mapping)
+    // This is a basic conversion for demonstration
+    final lat = 40.7128 + (100 - localPosition.dy) * 0.001; // Rough conversion
+    final lon = -74.0060 + (localPosition.dx - 100) * 0.001; // Rough conversion
+    
+    setState(() {
+      _pathPoints.add({'lat': lat, 'lon': lon});
+    });
+  }
+
   void _performAnalysis() async {
     setState(() => _isAnalyzing = true);
     
@@ -381,33 +404,14 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
       // Simulate analysis delay
       await Future.delayed(const Duration(seconds: 3));
       
-      // Show results dialog
+      // Generate random realistic values for demo
+      final circulation = (500 + (DateTime.now().millisecond % 1000)).toDouble();
+      final curlMagnitude = (0.005 + (DateTime.now().millisecond % 20) * 0.001);
+      final isStormRisk = curlMagnitude > 0.015;
+      
+      // Show enhanced results dialog
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Analysis Complete'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Circulation: 567.8 m²/s'),
-                const SizedBox(height: 8),
-                Text('Curl Magnitude: 0.012 s⁻¹'),
-                const SizedBox(height: 8),
-                Text('Storm Detection: Low Risk'),
-                const SizedBox(height: 8),
-                Text('Interpretation: Weak counterclockwise circulation detected. Low rotational activity - stable conditions.'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        _showStokesResultDialog(circulation, curlMagnitude, isStormRisk);
       }
     } catch (e) {
       if (mounted) {
@@ -421,4 +425,323 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
       }
     }
   }
+
+  void _showStokesResultDialog(double circulation, double curlMagnitude, bool isStormRisk) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, animation1, animation2) {
+        return Container();
+      },
+      transitionBuilder: (context, animation1, animation2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(
+            parent: animation1,
+            curve: Curves.elasticOut,
+          ),
+          child: FadeTransition(
+            opacity: animation1,
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '🌪️',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Stokes Analysis Complete',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Container(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Circulation Result
+                    _buildResultCard(
+                      '🔄',
+                      'Circulation',
+                      '${circulation.toStringAsFixed(1)} m²/s',
+                      circulation > 800 ? 'Strong' : circulation > 400 ? 'Moderate' : 'Weak',
+                      circulation > 800 ? Colors.red : circulation > 400 ? Colors.orange : Colors.green,
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Curl Magnitude
+                    _buildResultCard(
+                      '🌀',
+                      'Curl Magnitude',
+                      '${curlMagnitude.toStringAsFixed(3)} s⁻¹',
+                      curlMagnitude > 0.015 ? 'High Rotation' : curlMagnitude > 0.010 ? 'Moderate' : 'Low Rotation',
+                      curlMagnitude > 0.015 ? Colors.red : curlMagnitude > 0.010 ? Colors.orange : Colors.green,
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Storm Detection
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isStormRisk ? Colors.red[50] : Colors.green[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isStormRisk ? Colors.red[200]! : Colors.green[200]!,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            isStormRisk ? '⚠️' : '✅',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Storm Detection',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  isStormRisk ? 'High Risk - Monitor Closely' : 'Low Risk - Stable Conditions',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: isStormRisk ? Colors.red[700] : Colors.green[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Interpretation
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text('🧠', style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Physical Interpretation',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _getStokesInterpretation(circulation, curlMagnitude, isStormRisk),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.check),
+                  label: const Text('Got it!'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildResultCard(String emoji, String title, String value, String status, Color statusColor) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getStokesInterpretation(double circulation, double curlMagnitude, bool isStormRisk) {
+    String direction = circulation > 0 ? 'counterclockwise' : 'clockwise';
+    String strength = circulation.abs() > 800 ? 'Strong' : circulation.abs() > 400 ? 'Moderate' : 'Weak';
+    
+    if (isStormRisk) {
+      return '$strength $direction circulation with high rotational activity detected. The elevated curl magnitude suggests potential vortex formation. Weather conditions may become unstable with possible storm development.';
+    } else {
+      return '$strength $direction circulation with low rotational activity. The curl field shows minimal vorticity, indicating stable atmospheric conditions with low probability of storm formation.';
+    }
+  }
+}
+
+// Custom painter for drawing the path
+class PathPainter extends CustomPainter {
+  final List<Map<String, double>> points;
+  final Color color;
+
+  PathPainter(this.points, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final pointPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // Draw lines connecting points
+    if (points.length > 1) {
+      final path = Path();
+      
+      // Convert first point to screen coordinates
+      final firstPoint = _latLonToScreen(points[0], size);
+      path.moveTo(firstPoint.dx, firstPoint.dy);
+      
+      // Draw lines to other points
+      for (int i = 1; i < points.length; i++) {
+        final screenPoint = _latLonToScreen(points[i], size);
+        path.lineTo(screenPoint.dx, screenPoint.dy);
+      }
+      
+      // Close the path if we have enough points
+      if (points.length >= 3) {
+        path.close();
+      }
+      
+      canvas.drawPath(path, paint);
+    }
+
+    // Draw points
+    for (int i = 0; i < points.length; i++) {
+      final screenPoint = _latLonToScreen(points[i], size);
+      canvas.drawCircle(screenPoint, 6, pointPaint);
+      
+      // Draw point number
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${i + 1}',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          screenPoint.dx - textPainter.width / 2,
+          screenPoint.dy - textPainter.height / 2,
+        ),
+      );
+    }
+  }
+
+  Offset _latLonToScreen(Map<String, double> point, Size size) {
+    // Simple conversion from lat/lon to screen coordinates
+    // This is a basic mapping for demonstration
+    final lat = point['lat']!;
+    final lon = point['lon']!;
+    
+    // Map lat/lon to screen coordinates (simplified)
+    final x = (lon + 74.0060) * 1000 + size.width / 2;
+    final y = (40.7128 - lat) * 1000 + size.height / 2;
+    
+    return Offset(
+      x.clamp(0, size.width),
+      y.clamp(0, size.height),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
