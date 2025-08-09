@@ -44,10 +44,12 @@ class _GaussAnalysisScreenState extends ConsumerState<GaussAnalysisScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'Gauss\'s Divergence Theorem',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'Gauss\'s Divergence Theorem',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -323,11 +325,15 @@ class _GaussAnalysisScreenState extends ConsumerState<GaussAnalysisScreen> {
                   ),
                 ],
               ),
-              content: Container(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     // Net Flux Result
                     _buildGaussResultCard(
                       netFlux > 0 ? '📤' : '📥',
@@ -469,7 +475,8 @@ class _GaussAnalysisScreenState extends ConsumerState<GaussAnalysisScreen> {
                         ],
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               actions: [

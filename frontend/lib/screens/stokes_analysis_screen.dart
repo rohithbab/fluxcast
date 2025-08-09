@@ -40,10 +40,12 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
                           color: Theme.of(context).colorScheme.tertiary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'Stokes\' Circulation Theorem',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'Stokes\' Circulation Theorem',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -473,11 +475,15 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
                   ),
                 ],
               ),
-              content: Container(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     // Circulation Result
                     _buildResultCard(
                       '🔄',
@@ -573,7 +579,8 @@ class _StokesAnalysisScreenState extends ConsumerState<StokesAnalysisScreen> {
                         ],
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               actions: [

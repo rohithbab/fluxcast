@@ -133,11 +133,13 @@ class AboutScreen extends StatelessWidget {
                             children: [
                               Text('🌬️', style: const TextStyle(fontSize: 24)),
                               const SizedBox(width: 8),
-                              Text(
-                                'Atmospheric Physics Explained',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[800],
+                              Expanded(
+                                child: Text(
+                                  'Atmospheric Physics Explained',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[800],
+                                  ),
                                 ),
                               ),
                             ],
@@ -246,11 +248,13 @@ class AboutScreen extends StatelessWidget {
                             children: [
                               Text('🌀', style: const TextStyle(fontSize: 24)),
                               const SizedBox(width: 8),
-                              Text(
-                                'Circulation Physics Explained',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.purple[800],
+                              Expanded(
+                                child: Text(
+                                  'Circulation Physics Explained',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.purple[800],
+                                  ),
                                 ),
                               ),
                             ],
@@ -280,11 +284,13 @@ class AboutScreen extends StatelessWidget {
                             children: [
                               Text('⚠️', style: const TextStyle(fontSize: 24)),
                               const SizedBox(width: 8),
-                              Text(
-                                'Storm Formation Indicators',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.red[800],
+                              Expanded(
+                                child: Text(
+                                  'Storm Formation Indicators',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red[800],
+                                  ),
                                 ),
                               ),
                             ],
